@@ -69,3 +69,10 @@ class CommonUtil {
     );
   }
 }
+
+extension ColorHex on Color {
+  String toHex() {
+    final hex = value.toRadixString(16).padLeft(8, '0');
+    return '#${hex.substring(2)}'; // Remove 'ff' (opacity) part
+  }
+}
