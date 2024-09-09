@@ -1,5 +1,4 @@
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -7,8 +6,6 @@ import 'package:get/get.dart';
 import 'package:poc_ffmpeg/core/services/media_processor.dart';
 import 'package:poc_ffmpeg/editing_screen.dart';
 import 'package:poc_ffmpeg/utill/common_util.dart';
-import 'package:poc_ffmpeg/video_player.dart';
-import 'package:image/image.dart' as img;
 
 class Singlefilepicker extends StatefulWidget {
   const Singlefilepicker({super.key});
@@ -136,8 +133,7 @@ class _SinglefilepickerState extends State<Singlefilepicker> {
                     'Pick Video',
                     style: TextStyle(fontSize: 18),
                   ),
-                ),
-                if (images.isNotEmpty) const Text("Video Selected")
+                ),                
               ],
             ),
             Column(
@@ -248,9 +244,9 @@ class _SinglefilepickerState extends State<Singlefilepicker> {
 
   log("Process: New Created command for image to video : ${stopwatch.elapsedMilliseconds} ms");
     String filters =
-      '${inputpath.asMap().entries.map((e) => '[${e.key}]scale=720:405,setsar=1,fade=t=in:st=0:d=1,fade=t=out:st=4:d=1[v${e.key}]').join('; ')}; ${inputpath.asMap().entries.map((e) => '[v${e.key}]').join('')}concat=n=${inputpath.length}:v=1:a=0,format=yuv420p[v]';
+      '${inputpath.asMap().entries.map((e) => '[${e.key}]scale=720:406,setsar=1,fade=t=in:st=0:d=1,fade=t=out:st=4:d=1[v${e.key}]').join('; ')}; ${inputpath.asMap().entries.map((e) => '[v${e.key}]').join('')}concat=n=${inputpath.length}:v=1:a=0,format=yuv420p[v]';
 
-    return '''$inputs -filter_complex "$filters" -map "[v]" -threads 4 -loglevel debug -y $output''';
+    return '''$inputs -c:v libx264 -crf 19 -filter_complex "$filters" -map "[v]" -threads 4 -loglevel debug -y $output''';
   }
 
   // Function to resize images
@@ -273,29 +269,6 @@ class _SinglefilepickerState extends State<Singlefilepicker> {
 
     return resizedImages;
   }
-
-Future<List<String>> resizeImages(List<String> inputFiles) async {
-  final List<String> resizedImages = [];
-
-  // Create a directory for resized images
-  final outputDirectory = await _commonUtil.createTempDirectory();
-
-  for (int i = 0; i < inputFiles.length; i++) {
-    final inputFile = File(inputFiles[i]);
-    final image = img.decodeImage(inputFile.readAsBytesSync());
-
-    // Resize the image while maintaining the aspect ratio
-    final resizedImage = img.copyResize(image!, height: 1080);
-
-    // Save the resized image
-    final outputPath = '$outputDirectory/resized_image_$i.jpg';
-    File(outputPath)
-      .writeAsBytesSync(img.encodeJpg(resizedImage));
-    resizedImages.add(outputPath);
-  }
-
-  return resizedImages;
-}
 
 
   // Function to resize images

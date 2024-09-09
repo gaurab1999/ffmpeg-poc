@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:poc_ffmpeg/core/models/feature.dart';
+import 'package:poc_ffmpeg/core/video-features/feature.dart';
 
 class DrawFeature extends Feature {
   List<Offset> points;
@@ -12,6 +12,10 @@ class DrawFeature extends Feature {
     required this.strokeWidth,
     required super.position,
     required super.size,
+    required super.editingFeatures,
+    required super.isFFmpegNeeded,
+    required super.onClickCallBack,
+    super.id
   });
 
   @override
@@ -24,6 +28,12 @@ class DrawFeature extends Feature {
         painter: DrawPainter(points, color, strokeWidth),
       ),
     );
+  }
+
+  @override
+  String generateFFmpegCommand() {
+    // TODO: implement generateFFmpegCommand
+    throw UnimplementedError();
   }
 }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:poc_ffmpeg/core/models/feature.dart';
+import 'package:poc_ffmpeg/core/video-features/feature.dart';
 
 class QuizPollFeature extends Feature {
   final String question;
@@ -12,6 +12,10 @@ class QuizPollFeature extends Feature {
     required this.selectedOption,
     required super.position,
     required super.size,
+    required super.editingFeatures,
+    required super.isFFmpegNeeded,
+    required super.onClickCallBack,
+    super.id
   });
 
   @override
@@ -50,5 +54,11 @@ class QuizPollFeature extends Feature {
         ],
       ),
     );
+  }
+
+  @override
+  String generateFFmpegCommand() {
+    // TODO: implement generateFFmpegCommand
+    throw UnimplementedError();
   }
 }

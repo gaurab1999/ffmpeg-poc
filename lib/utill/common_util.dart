@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 class CommonUtil {
@@ -30,6 +31,16 @@ class CommonUtil {
     await outputDirectory.create(recursive: true);
     return outputDirectory.path;
   }
+
+  Future<String> createDocumentsDirectory() async {
+  // Get application documents directory
+  final directory = await getExternalStorageDirectory();
+
+  final outputDirectory =
+        Directory('${directory!.path}/Pictures/edit/${DateTime.now().millisecondsSinceEpoch}');
+    await outputDirectory.create(recursive: true);
+    return outputDirectory.path;
+}
 
   void showSimpleDialog(BuildContext context, description) {
     showDialog(
@@ -68,6 +79,30 @@ class CommonUtil {
       },
     );
   }
+
+static Future<String> getFontFilePath() async {
+  final directory = await getTemporaryDirectory(); // Or getApplicationDocumentsDirectory
+  final fontFile = File('${directory.path}/Montserrat-Regular.ttf');
+  
+  // Copy font file from assets to the temporary directory
+  final ByteData data = await rootBundle.load('assets/fonts/Montserrat-Regular.ttf');
+  final Uint8List bytes = data.buffer.asUint8List();
+  await fontFile.writeAsBytes(bytes);
+
+  return fontFile.path;
+}
+
+Future<void> getFileSize(String filePath) async {
+  final file = File(filePath);
+  if (await file.exists()) {
+    final fileSize = await file.length();
+    print('File size: ${fileSize / 1024} KB');
+  } else {
+    print('File does not exist.');
+  }
+}
+
+
 }
 
 extension ColorHex on Color {

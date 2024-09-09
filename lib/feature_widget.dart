@@ -1,5 +1,7 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
-import 'package:poc_ffmpeg/core/models/feature.dart';
+import 'package:poc_ffmpeg/core/video-features/feature.dart';
 
 class FeatureWidget extends StatefulWidget {
   final Feature feature;
@@ -20,17 +22,17 @@ class _FeatureWidgetState extends State<FeatureWidget> {
 
   @override
   Widget build(BuildContext context) {
+    log("called build feature widet");
     return Positioned(
       left: widget.feature.position.dx,
       top: widget.feature.position.dy,
       child: GestureDetector(
         onPanUpdate: (details) {
-          setState(() {
-            widget.feature.position = Offset(
-                widget.feature.position.dx + details.delta.dx,
-                widget.feature.position.dy + details.delta.dy);
-          });
-          widget.onUpdateFeature(widget.feature);
+          log("called inside feature widet");
+          widget.feature.position = Offset(
+              widget.feature.position.dx + details.delta.dx,
+              widget.feature.position.dy + details.delta.dy);
+          widget.onUpdateFeature(widget.feature); 
         },
         child: widget.feature.render(),
       ),

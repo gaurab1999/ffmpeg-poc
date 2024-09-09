@@ -1,18 +1,18 @@
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:poc_ffmpeg/core/models/add_yours_feature.dart';
-import 'package:poc_ffmpeg/core/models/draw_feature.dart';
-import 'package:poc_ffmpeg/core/models/feature.dart';
-import 'package:poc_ffmpeg/core/models/link_challenge_feature.dart';
-import 'package:poc_ffmpeg/core/models/quiz_feature.dart';
-import 'package:poc_ffmpeg/core/models/text_feature.dart';
+import 'package:poc_ffmpeg/core/video-features/feature.dart';
 import 'package:poc_ffmpeg/core/services/media_processor.dart';
+import 'package:poc_ffmpeg/core/video-features/video_builder.dart';
+import 'package:poc_ffmpeg/core/widgets/add_yours_feature_widget.dart';
+import 'package:poc_ffmpeg/core/widgets/draw_feature_widget.dart';
+import 'package:poc_ffmpeg/core/widgets/quiz_poll_feature_widget.dart';
+import 'package:poc_ffmpeg/core/widgets/text_feature_widget.dart';
 import 'package:poc_ffmpeg/feature_widget.dart';
 import 'package:poc_ffmpeg/utill/common_util.dart';
+import 'package:poc_ffmpeg/utill/enums.dart';
 import 'package:poc_ffmpeg/video_player.dart';
 import 'package:video_player/video_player.dart';
 
@@ -25,9 +25,12 @@ class EditingScreen extends StatefulWidget {
 }
 
 class _EditingScreenState extends State<EditingScreen> {
-  List<Feature> features = [];
   final CommonUtil _commonUtil = CommonUtil();
   late VideoPlayerController _controller;
+  final VideoBuilder videoBuilder = VideoBuilder();
+  VideoEditingFeatures? selectedFeature;
+  final Stopwatch stopwatch = Stopwatch();
+  Feature? featureToUpdate;
 
   @override
   void initState() {
@@ -48,6 +51,7 @@ class _EditingScreenState extends State<EditingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           Center(
@@ -59,8 +63,8 @@ class _EditingScreenState extends State<EditingScreen> {
                 : Container(),
           ),
           // Video or background goes here
-          ...features.map((feature) =>
-              FeatureWidget(feature: feature, onUpdateFeature: updateFeature)),
+          ...videoBuilder.getFeatureList().map((feature) => FeatureWidget(
+              feature: feature, onUpdateFeature: addOrUpdateFeature)),
           // Vertical list of options
           Positioned(
             right: 8,
@@ -68,7 +72,7 @@ class _EditingScreenState extends State<EditingScreen> {
             // bottom: 0,
             child: Container(
               width: 50,
-              color: Colors.black45,
+              color: const Color.fromARGB(115, 152, 148, 148),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
@@ -76,69 +80,31 @@ class _EditingScreenState extends State<EditingScreen> {
                   IconButton(
                     icon: const Icon(Icons.camera),
                     onPressed: () {
-                      addFeature(AddYoursFeature(
-                        profileImageUrl: 'https://example.com/profile.jpg',
-                        textController: TextEditingController(),
-                        position: const Offset(100, 10),
-                        size: 1.0,
-                      ));
+                      addFeature(VideoEditingFeatures.addYours);
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.list),
                     onPressed: () {
-                      addFeature(LinkChallengeFeature(
-                        challenges: ['Challenge 1', 'Challenge 2'],
-                        position: const Offset(150, 150),
-                        size: 1.0,
-                      ));
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.poll),
-                    onPressed: () {
-                      addFeature(QuizPollFeature(
-                        question: 'What is your favorite color?',
-                        options: ['Red', 'Blue', 'Green', 'Yellow'],
-                        selectedOption: ValueNotifier<String?>(null),
-                        position: const Offset(200, 200),
-                        size: 1.0,
-                      ));
+                      addFeature(VideoEditingFeatures.linkChallenge);
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.draw),
                     onPressed: () {
-                      addFeature(DrawFeature(
-                        color: Colors.red,
-                        points: [const Offset(10, 10)],
-                        strokeWidth: 1.0,
-                        position: const Offset(200, 200),
-                        size: 1.0,
-                      ));
+                      addFeature(VideoEditingFeatures.draw);
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.text_fields),
                     onPressed: () {
-                      addFeature(TextFeature(
-                          text: "hello",
-                          position: const Offset(200, 200),
-                          size: 10.0,
-                          textStyle: const TextStyle(
-                              color: Colors.black, fontSize: 24)));
+                      addFeature(VideoEditingFeatures.text);
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.poll),
                     onPressed: () {
-                      addFeature(QuizPollFeature(
-                        question: 'What is your favorite color?',
-                        options: ['Red', 'Blue', 'Green', 'Yellow'],
-                        selectedOption: ValueNotifier<String?>(null),
-                        position: const Offset(200, 200),
-                        size: 1.0,
-                      ));
+                      addFeature(VideoEditingFeatures.quizPoll);
                     },
                   ),
                   // Add more buttons for other features
@@ -146,6 +112,12 @@ class _EditingScreenState extends State<EditingScreen> {
               ),
             ),
           ),
+          if (selectedFeature != null)
+            Container(
+                color: Colors.black54,
+                child: _buildFeatureContent(
+                    existingFeature: featureToUpdate,
+                    feature: selectedFeature!))
         ],
       ),
       floatingActionButton: Column(
@@ -177,74 +149,96 @@ class _EditingScreenState extends State<EditingScreen> {
     );
   }
 
-  void addFeature(Feature feature) {
+  void addFeature(VideoEditingFeatures editingFeature) {
     setState(() {
-      features.add(feature);
+      selectedFeature = editingFeature;
     });
   }
 
-  void updateFeature(Feature updatedFeature) {
+  Widget _buildFeatureContent(
+      {required VideoEditingFeatures feature, Feature? existingFeature}) {
+    switch (feature) {
+      case VideoEditingFeatures.text:
+        return TextFeatureWidget(
+          existingFeature: existingFeature,
+          onClickCallback: (Feature existingData) {
+            setState(() {
+              featureToUpdate = existingData;
+            });
+            addFeature(feature);
+          },
+          callback: addOrUpdateFeature,
+        );
+      case VideoEditingFeatures.addYours:
+        return AddYoursFeatureWidget(
+          callback: addOrUpdateFeature,
+        );
+      case VideoEditingFeatures.draw:
+        return DrawFeatureWidget(onChanged: (value) {});
+      case VideoEditingFeatures.quizPoll:
+        return QuizPollFeatureWidget(
+            onSubmit: (String question, List<String> options) {});
+      default:
+        return const Text("Feature not supported");
+    }
+  }
+
+  void addOrUpdateFeature(Feature updatedFeature) {
+    log("Called here update");
+    int index = videoBuilder
+        .getFeatureList()
+        .indexWhere((feature) => feature.id == updatedFeature.id);
+    if (index != -1) {
+      setState(() {
+        videoBuilder.updateFeatureAt(index, updatedFeature);
+      });
+    } else {
+      setState(() {
+        videoBuilder.addFeature(updatedFeature);
+      });
+    }
+
+    // reset selected feature
     setState(() {
-      int index = features.indexWhere((feature) => feature == updatedFeature);
-      if (index != -1) {
-        features[index] = updatedFeature;
-      }
+      selectedFeature = null;
     });
   }
 
   Future<void> finalizeVideo() async {
+    stopwatch.start();
+    _commonUtil.openLoadingDialog(context);
+    log('Process: Started process of finalizing video: ${stopwatch.elapsedMilliseconds} ms');
     final inputVideoPath = widget.inputPath;
+    log('Process: Creating temp directory: ${stopwatch.elapsedMilliseconds} ms');
     final outputDirectory = await _commonUtil.createTempDirectory();
-    final outputVideoPath = '$outputDirectory/final_video_output.mp4';
-
-    final ffmpegCommand =
-        generateFFmpegCommand(inputVideoPath, features, outputVideoPath);
+    final outputVideoPath = '$outputDirectory/output.mp4';
+    log('Process: Creating ffmpeg command from features : ${stopwatch.elapsedMilliseconds} ms');
+    // Get the actual video dimensions
+    String ffmpegCommand = getFFmpegCommand(inputVideoPath, outputVideoPath);
     log('Command has been finalized: $ffmpegCommand');
     final processor = MediaProcessor();
+    log('Process: Starting ffmpeg command : ${stopwatch.elapsedMilliseconds} ms');
     await processor.execute(ffmpegCommand);
-    log('Video finalized and saved to $outputDirectory');
-    Get.to(VideoPlayerScreen(inputPath: outputDirectory));
+    log('Process: Finished ffmpeg command : ${stopwatch.elapsedMilliseconds} ms');
+    stopwatch.stop();
+    stopwatch.reset();
+    Get.back();
+    log('Video finalized and saved to $outputVideoPath');
+    Get.to(() => VideoPlayerScreen(inputPath: outputVideoPath));
   }
 
-  String generateFFmpegCommand(
-      String inputVideoPath, List<Feature> features, String outputVideoPath) {
-    // Base command
-    String command = '-i $inputVideoPath';
+  String getFFmpegCommand(String inputVideoPath, String outputVideoPath) {
+    final videoWidth = _controller.value.size.width;
+    final videoHeight = _controller.value.size.height;
 
-    // Generate overlay commands for each feature
-    String overlayCommands = features
-        .map((feature) {
-          final position = feature.position;
-
-          // Example command for each feature type; adjust as needed
-          if (feature is AddYoursFeature) {
-            // Implement your command for AddYoursFeature
-            return ''; // Placeholder: implement as needed
-          } else if (feature is LinkChallengeFeature) {
-            // Implement your command for LinkChallengeFeature
-            return ''; // Placeholder: implement as needed
-          } else if (feature is QuizPollFeature) {
-            // Implement your command for QuizPollFeature
-            return ''; // Placeholder: implement as needed
-          } else if (feature is TextFeature) {
-            final text = feature.text;
-            final fontSize = (feature.textStyle.fontSize ?? 20.0)
-                .toInt(); // Default to 20 if not set
-            final color = feature.textStyle.color?.toHex() ??
-                'white'; // Default to white if not set
-
-            // Return drawtext command
-            return "drawtext=text='Hello World':x=10:y=10:fontsize=24:fontcolor=black:box=1:boxcolor=black:boxborderw=5";
-          }
-
-          return ''; // No command for unrecognized feature
-        })
-        .where((cmd) => cmd.isNotEmpty)
-        .join(',');
-
-    // Complete the command
-    command += ' -vf "$overlayCommands" -y $outputVideoPath';
-
-    return command;
+    // Get the dimensions of the widget displaying the video
+    final widgetWidth = MediaQuery.of(context).size.width;
+    final widgetHeight = widgetWidth / _controller.value.aspectRatio;
+    final ffmpegCommand = videoBuilder.buildFFmpegCommand(
+        inputVideoPath: inputVideoPath,
+        outputVideoPath: outputVideoPath,
+        videoOffset: Offset(videoWidth, videoHeight),
+        widgetOffset: Offset(widgetWidth, widgetHeight));
+    return ffmpegCommand;
   }
 }

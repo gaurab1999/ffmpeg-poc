@@ -1,8 +1,10 @@
 import 'dart:developer';
 
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter/return_code.dart';
+
+import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_full_gpl/return_code.dart';
 import 'package:poc_ffmpeg/core/operations/ffmpeg_operation.dart';
+
 
 class MediaProcessor {
   final List<FFmpegOperation> operations = [];

@@ -1,6 +1,8 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:poc_ffmpeg/utill/common_util.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
@@ -17,6 +19,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   @override
   void initState() {
     super.initState();
+    CommonUtil().getFileSize(widget.inputPath);
     _controller = VideoPlayerController.file(File(widget.inputPath))
       ..initialize().then((_) {
         // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
@@ -26,6 +29,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    CommonUtil().getFileSize(widget.inputPath);
     return MaterialApp(
       title: 'Video Demo',
       home: Scaffold(

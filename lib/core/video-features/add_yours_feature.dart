@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:poc_ffmpeg/core/models/feature.dart';
+import 'package:poc_ffmpeg/core/video-features/feature.dart';
 
 class AddYoursFeature extends Feature {
   final String profileImageUrl;
@@ -10,6 +10,10 @@ class AddYoursFeature extends Feature {
     required this.textController,
     required super.position,
     required super.size,
+    required super.editingFeatures, 
+    required super.isFFmpegNeeded, 
+    required super.onClickCallBack,
+    super.id
   });
 
   @override
@@ -40,5 +44,11 @@ class AddYoursFeature extends Feature {
         ],
       ),
     );
+  }
+  
+  @override
+  String generateFFmpegCommand() {
+    // TODO: implement generateFFmpegCommand
+    throw UnimplementedError();
   }
 }
