@@ -131,7 +131,7 @@ class _TextFeatureWidgetState extends State<TextFeatureWidget> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.0),
                     borderSide: const BorderSide(
-                      color: Colors.blueAccent,
+                      color: Color.fromARGB(255, 68, 255, 90),
                       width: 2.0,
                     ),
                   ),
