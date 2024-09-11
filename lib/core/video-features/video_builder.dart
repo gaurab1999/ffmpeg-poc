@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:poc_ffmpeg/core/video-features/feature.dart';
+import 'package:poc_ffmpeg/core/video-features/text_feature.dart';
 
 class VideoBuilder {
   final List<Feature> _features = [];
@@ -11,7 +12,7 @@ class VideoBuilder {
   }
 
   void updateFeatureAt(int index, Feature feature) {
-    log("called update feature");
+    print("called updateFeatureAt");
     _features[index] = feature;
   }
 
@@ -24,7 +25,6 @@ class VideoBuilder {
   }
 
   List<Feature> getFeatureList() {
-    log("called get feature list");
     return _features;
   }
 
@@ -39,14 +39,18 @@ class VideoBuilder {
     // Build the filter graph for FFmpeg
     String filterGraph = _features
         .map((feature) {
-          Feature finalFeature = feature;
+          Feature updatedFeature = feature;
           final videoPosX =
               (feature.position.dx / widgetOffset.dx) * videoOffset.dx;
           final videoPosY =
               (feature.position.dy / widgetOffset.dy) * videoOffset.dy;
-          finalFeature.position = Offset(videoPosX, videoPosY);
-          finalFeature.size = (24 / widgetOffset.dx) * videoOffset.dx;
-          return finalFeature.generateFFmpegCommand();
+          if (feature is TextFeature) {
+            updatedFeature = feature.copyWith(
+              position: Offset(videoPosX, videoPosY),
+              size: (24 / widgetOffset.dx) * videoOffset.dx,
+            );
+          }
+          return updatedFeature.generateFFmpegCommand();
         })
         .where((cmd) => cmd.isNotEmpty)
         .join(',');

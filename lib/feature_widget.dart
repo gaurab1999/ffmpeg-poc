@@ -22,17 +22,17 @@ class _FeatureWidgetState extends State<FeatureWidget> {
 
   @override
   Widget build(BuildContext context) {
-    log("called build feature widet");
+    log("called build feature with ${widget.feature.position}");
     return Positioned(
       left: widget.feature.position.dx,
       top: widget.feature.position.dy,
       child: GestureDetector(
         onPanUpdate: (details) {
-          log("called inside feature widet");
+          print("called pan update with ${widget.feature.position}");
           widget.feature.position = Offset(
               widget.feature.position.dx + details.delta.dx,
               widget.feature.position.dy + details.delta.dy);
-          widget.onUpdateFeature(widget.feature); 
+          widget.onUpdateFeature(widget.feature);
         },
         child: widget.feature.render(),
       ),

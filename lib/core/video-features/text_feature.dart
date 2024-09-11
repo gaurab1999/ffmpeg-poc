@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:poc_ffmpeg/core/video-features/feature.dart';
 import 'package:poc_ffmpeg/utill/common_util.dart';
+import 'package:poc_ffmpeg/utill/enums.dart';
 
 class TextFeature extends Feature {
   final String text;
@@ -18,6 +19,30 @@ class TextFeature extends Feature {
       required super.onClickCallBack,
       super.id
       });
+
+  TextFeature copyWith({
+    String? text,
+    TextStyle? textStyle,
+    Offset? position,
+    double? size,
+    bool? isFFmpegNeeded,
+    String? fontPath,
+    Function()? onClickCallBack,
+    String? id,
+    VideoEditingFeatures? editingFeatures
+  }) {
+    return TextFeature(
+      text: text ?? this.text,
+      textStyle: textStyle ?? this.textStyle,
+      position: position ?? this.position,
+      size: size ?? this.size,
+      isFFmpegNeeded: isFFmpegNeeded ?? this.isFFmpegNeeded,
+      fontPath: fontPath ?? this.fontPath,
+      onClickCallBack: onClickCallBack ?? this.onClickCallBack,
+      id: id ?? this.id, 
+      editingFeatures: editingFeatures ?? this.editingFeatures,
+    );
+  }    
 
   @override
   Widget render() {

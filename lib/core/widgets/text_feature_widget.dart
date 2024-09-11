@@ -145,7 +145,7 @@ class _TextFeatureWidgetState extends State<TextFeatureWidget> {
                           color: selectedColor,
                           fontSize: 24,
                           fontFamily: 'Montserrat'),
-                      position: const Offset(100, 100),
+                      position: widget.existingFeature?.position ?? Offset(100, 100),
                       isFFmpegNeeded: true,
                       size: 0,
                       editingFeatures: VideoEditingFeatures.text,

@@ -201,30 +201,38 @@ class _EditingScreenState extends State<EditingScreen> {
     // reset selected feature
     setState(() {
       selectedFeature = null;
+      featureToUpdate = null;
     });
   }
 
   Future<void> finalizeVideo() async {
-    stopwatch.start();
-    _commonUtil.openLoadingDialog(context);
-    log('Process: Started process of finalizing video: ${stopwatch.elapsedMilliseconds} ms');
-    final inputVideoPath = widget.inputPath;
-    log('Process: Creating temp directory: ${stopwatch.elapsedMilliseconds} ms');
-    final outputDirectory = await _commonUtil.createTempDirectory();
-    final outputVideoPath = '$outputDirectory/output.mp4';
-    log('Process: Creating ffmpeg command from features : ${stopwatch.elapsedMilliseconds} ms');
-    // Get the actual video dimensions
-    String ffmpegCommand = getFFmpegCommand(inputVideoPath, outputVideoPath);
-    log('Command has been finalized: $ffmpegCommand');
-    final processor = MediaProcessor();
-    log('Process: Starting ffmpeg command : ${stopwatch.elapsedMilliseconds} ms');
-    await processor.execute(ffmpegCommand);
-    log('Process: Finished ffmpeg command : ${stopwatch.elapsedMilliseconds} ms');
-    stopwatch.stop();
-    stopwatch.reset();
-    Get.back();
-    log('Video finalized and saved to $outputVideoPath');
-    Get.to(() => VideoPlayerScreen(inputPath: outputVideoPath));
+    try {
+      stopwatch.start();
+      _commonUtil.openLoadingDialog(context);
+      log('Process: Started process of finalizing video: ${stopwatch.elapsedMilliseconds} ms');
+      final inputVideoPath = widget.inputPath;
+      log('Process: Creating temp directory: ${stopwatch.elapsedMilliseconds} ms');
+      final outputDirectory = await _commonUtil.createTempDirectory();
+      final outputVideoPath = '$outputDirectory/output.mp4';
+      log('Process: Creating ffmpeg command from features : ${stopwatch.elapsedMilliseconds} ms');
+      // Get the actual video dimensions
+      String ffmpegCommand = getFFmpegCommand(inputVideoPath, outputVideoPath);
+      log('Command has been finalized: $ffmpegCommand');
+      final processor = MediaProcessor();
+      log('Process: Starting ffmpeg command : ${stopwatch.elapsedMilliseconds} ms');
+      await processor.execute(ffmpegCommand);
+      log('Process: Finished ffmpeg command : ${stopwatch.elapsedMilliseconds} ms');
+      stopwatch.stop();
+      stopwatch.reset();
+      Get.back();
+      log('Video finalized and saved to $outputVideoPath');
+      Get.to(() => VideoPlayerScreen(inputPath: outputVideoPath));
+    } catch (e) {
+      log('Some error occured $e');
+      stopwatch.stop();
+      stopwatch.reset();
+      Get.back();
+    }
   }
 
   String getFFmpegCommand(String inputVideoPath, String outputVideoPath) {
@@ -234,6 +242,8 @@ class _EditingScreenState extends State<EditingScreen> {
     // Get the dimensions of the widget displaying the video
     final widgetWidth = MediaQuery.of(context).size.width;
     final widgetHeight = widgetWidth / _controller.value.aspectRatio;
+    print(
+        "called $videoWidth, $videoHeight with widget $widgetWidth, $widgetHeight");
     final ffmpegCommand = videoBuilder.buildFFmpegCommand(
         inputVideoPath: inputVideoPath,
         outputVideoPath: outputVideoPath,
